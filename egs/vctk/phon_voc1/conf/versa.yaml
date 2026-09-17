@@ -1,0 +1,69 @@
+# VERSA evaluation configuration for phon_voc1.
+# Adapted from https://github.com/espnet/espnet/blob/master/egs2/dailytalk/tts1/conf/versa.yaml,
+# trimmed to the metrics we actually care about for this task:
+#   - mcd_f0:   reconstruction fidelity (spectral + pitch), directly
+#               comparable to ../../../parallel_wavegan/bin/evaluate_mcd.py
+#               and evaluate_f0.py, but computed in one pass here.
+#   - speaker:  x-vector/speaker-embedding cosine similarity between
+#               generated and ground-truth audio. This is the metric that
+#               most directly validates *why* we chose x-vector conditioning
+#               (DiscreteSymbolXvectorHiFiGANGenerator) over a closed-set
+#               speaker-id embedding: it should stay high even for the
+#               LibriTTS dev/test speakers, which never appear in train.
+#   - pseudo_mos (utmos): reference-free naturalness prediction.
+#   - whisper_wer: transcribe the generated audio and compare against the
+#               ground-truth transcript. For a vocoder (not a TTS acoustic
+#               model), this is mainly a diagnostic for how much linguistic
+#               content the Sony Phonological-Tokenizer's 2000-way discrete
+#               bottleneck throws away.
+#   - discrete_speech: SSL-token-based content/semantic preservation score,
+#               complementary to whisper_wer.
+#
+# Left out on purpose (lower priority for this task, see prior discussion):
+# nomad, sheet_ssqa, audiobox_aesthetics, asr_match, asvspoof_score.
+
+# mcd f0 related metrics
+#  -- mcd: mel cepstral distortion
+#  -- f0_corr: f0 correlation
+#  -- f0_rmse: f0 root mean square error
+- name: mcd_f0
+  f0min: 40
+  f0max: 800
+  mcep_shift: 5
+  mcep_fftl: 1024
+  mcep_dim: 24
+  # NOTE: 0.41 is the standard all-pass alpha for 16kHz (matches
+  # parallel_wavegan/bin/evaluate_mcd.py's own default), not the dailytalk
+  # reference's 0.466 -- that value is tuned for 24kHz output, which is not
+  # what this recipe's vocoder produces (sampling_rate: 16000 in
+  # conf/hifigan_phon.v1.yaml).
+  mcep_alpha: 0.41
+  seq_mismatch_tolerance: 0.5
+  power_threshold: -20
+  dtw: true
+
+# discrete speech metrics
+# -- speech_bert: speech bert score
+# -- speech_bleu: speech bleu score
+# -- speech_token_distance: speech token distance score
+- name: discrete_speech
+
+# pseudo subjective metrics
+# -- utmos: UT-MOS score
+- name: pseudo_mos
+  predictor_types: ["utmos"]
+  predictor_args:
+    utmos:
+      fs: 16000
+
+# Word error rate with OpenAI-Whisper model
+# -- whisper_wer: word error rate of openai-whisper
+- name: whisper_wer
+  model_tag: default
+  beam_size: 1
+  text_cleaner: whisper_basic
+
+# speaker related metrics
+# -- spk_similarity: speaker cosine similarity
+- name: speaker
+  model_tag: default

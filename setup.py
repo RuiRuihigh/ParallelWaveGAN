@@ -4,7 +4,6 @@
 """Setup Parallel WaveGAN libarary."""
 
 import os
-import pip
 import sys
 
 from distutils.version import LooseVersion
@@ -15,11 +14,6 @@ if LooseVersion(sys.version) < LooseVersion("3.7"):
     raise RuntimeError(
         "parallel-wavegan requires Python>=3.7, "
         "but your Python is {}".format(sys.version)
-    )
-if LooseVersion(pip.__version__) < LooseVersion("19"):
-    raise RuntimeError(
-        "pip>=19.0.0 is required, but your pip is {}. "
-        'Try again after "pip install -U pip"'.format(pip.__version__)
     )
 
 requirements = {
