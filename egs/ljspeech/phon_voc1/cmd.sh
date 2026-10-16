@@ -69,8 +69,10 @@ elif [ "${cmd_backend}" = slurm ]; then
     # You can use "--gpu * " by defualt for slurm and it is interpreted as "--gres gpu:*"
     # The devices are allocated exclusively using "${CUDA_VISIBLE_DEVICES}".
 
+    # run.sh re-sources this file, so a caller can't just override cuda_cmd;
+    # set CUDA_SLURM_CONF instead (e.g. conf/slurm_clsp_a100.conf for stage 4).
     export train_cmd="utils/slurm.pl"
-    export cuda_cmd="utils/slurm.pl"
+    export cuda_cmd="utils/slurm.pl --config ${CUDA_SLURM_CONF:-conf/slurm.conf}"
     export decode_cmd="utils/slurm.pl"
 
 elif [ "${cmd_backend}" = ssh ]; then
